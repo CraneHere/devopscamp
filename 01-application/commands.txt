@@ -1,0 +1,5 @@
+docker build -t echo-server .
+docker run -e AUTHOR="Author" -p 8000:8000 echo-server
+docker build -t echo-server .
+docker tag echo-server cranehere/echo-server:latest
+docker push cranehere/echo-server:latest
