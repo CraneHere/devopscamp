@@ -1,0 +1,31 @@
+---
+- name: Login to private registry
+  community.docker.docker_login:
+    registry_url: "https://index.docker.io/v1/"
+    username: "cranehere"
+    password: "{{ docker_password }}"
+  vars:
+    docker_password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      65313862356338386262616162393539626432306135303237663861383233643930386565393531
+      6231313066653637333332613139373437313536656561330a323436666264326561313163636662
+      66373931633630393963306561343065666436333564333531376430363931666461653731623962
+      6339313062373633650a613539303030383465353736303636636362643835393964643366636633
+      3665
+
+- name: Pull application image
+  community.docker.docker_image:
+    name: "{{ app_image }}"
+    source: pull
+
+- name: Run application containers
+  community.docker.docker_container:
+    name: "echo-server_{{ item }}"
+    image: "{{ app_image }}"
+    state: started
+    restart_policy: unless-stopped
+    env:
+      AUTHOR: "{{ author }}"
+    ports:
+      - "{{ app_ports[item|int - 1] }}:8000"
+  loop: "{{ range(1, app_instances + 1)|list }}"

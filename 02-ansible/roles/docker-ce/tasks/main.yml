@@ -1,0 +1,55 @@
+---
+- name: Update apt package index
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required system packages
+  apt:
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - gnupg-agent
+    state: present
+    update_cache: yes
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch={{ ansible_architecture }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: present
+    update_cache: yes
+
+- name: Install Docker components
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+
+- name: Install Python3 and pip
+  apt:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+- name: Install Docker SDK for Python
+  pip:
+    name: docker
+    state: present
+    executable: pip3
+
+- name: Start and enable Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes

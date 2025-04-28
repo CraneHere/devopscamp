@@ -1,0 +1,31 @@
+---
+- hosts: web
+  become: yes
+  vars:
+    app_image: "cranehere/echo-server:latest"
+    app_instances: 3
+    app_ports: [8001, 8002, 8003]
+    author: "Author"
+
+  tasks:
+    - name: Clean up any existing containers
+      block:
+        - name: Stop and remove containers
+          community.docker.docker_container:
+            name: "echo-server_{{ item }}"
+            state: absent
+            force_kill: yes
+          loop: "{{ range(1, app_instances+1)|list }}"
+          ignore_errors: yes
+          register: cleanup_result
+          changed_when: "'No such container' not in cleanup_result.results[item.ansible_loop.index0].msg"
+
+        - name: Wait for cleanup to complete
+          pause:
+            seconds: 2
+      when: force_cleanup | default(true)
+
+  roles:
+    - role: docker-ce
+    - role: nginx
+    - role: app
